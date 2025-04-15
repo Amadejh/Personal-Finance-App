@@ -1,0 +1,23 @@
+[15-Apr-2025 17:28:29 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 2643.06 za nov saldo 3643.06
+[15-Apr-2025 17:31:14 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 1643.06 za nov saldo 2643.06
+[15-Apr-2025 17:34:18 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:34:18 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:34:19 Europe/Berlin] ⚠️ ROLLBACK: Data truncated for column 'category' at row 1
+[15-Apr-2025 17:34:39 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:34:39 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:34:39 Europe/Berlin] ⚠️ ROLLBACK: Data truncated for column 'category' at row 1
+[15-Apr-2025 17:36:31 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:36:31 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:36:31 Europe/Berlin] ⚠️ ROLLBACK: Data truncated for column 'category' at row 1
+[15-Apr-2025 17:36:43 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:36:43 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:36:43 Europe/Berlin] ⚠️ ROLLBACK: Data truncated for column 'category' at row 1
+[15-Apr-2025 17:36:52 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:36:52 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:36:53 Europe/Berlin] ⚠️ ROLLBACK: Data truncated for column 'category' at row 1
+[15-Apr-2025 17:37:53 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:37:53 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:37:54 Europe/Berlin] ⚠️ ROLLBACK: Column 'amount' cannot be null
+[15-Apr-2025 17:40:12 Europe/Berlin] ✅ Dodajam 1000.00 k trenutnem stanju 643.06 za nov saldo 1643.06
+[15-Apr-2025 17:40:12 Europe/Berlin] PHP Warning:  Undefined variable $goalName in C:\xampp\htdocs\personal-banking-app\partials\handle_forms.php on line 194
+[15-Apr-2025 17:40:13 Europe/Berlin] ⚠️ ROLLBACK: Column 'amount' cannot be null

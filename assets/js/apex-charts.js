@@ -1,4 +1,3 @@
-
 // 🎨 Balanced dark theme chart styling
 const chartColors = {
   allocation: ['#a9d9ae', '#b6dfba', '#c2e4c5'], // soft greens
@@ -38,7 +37,7 @@ const globalChartOptions = {
   }
 };
 
-// 📊 Cash Flow Chart
+/*// 📊 Cash Flow Chart
 if (document.querySelector("#flowChart")) {
   if (window.flowChartInstance) window.flowChartInstance.destroy();
 
@@ -46,8 +45,8 @@ if (document.querySelector("#flowChart")) {
     ...globalChartOptions,
     chart: { ...globalChartOptions.chart, type: 'bar' },
     series: [
-      { name: 'Nakazila', data: chartData.flowChart.nakazila },
-      { name: 'Dvigi', data: chartData.flowChart.dvigi }
+      { name: 'Deposits', data: chartData.flowChart.deposits },
+      { name: 'Withdrawals', data: chartData.flowChart.withdrawals }
     ],
     xaxis: {
       categories: chartData.flowChart.months,
@@ -64,7 +63,7 @@ if (document.querySelector("#flowChart")) {
   });
 
   window.flowChartInstance.render();
-}
+} */
 
 // 💰 Wallet vs. Savings (Donut)
 if (document.querySelector("#walletVsSavingsChart")) {
@@ -145,7 +144,7 @@ if (document.querySelector("#savingsBreakdownChart")) {
       theme: 'dark',
       y: {
         formatter: function (val) {
-          return  val.toLocaleString(undefined, {
+          return val.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
           }) + "€";
@@ -197,13 +196,13 @@ if (
       enabled: true,
       style: { fontSize: '14px', colors: ['#ffffff'] },
       formatter: function (text, op) {
-        return `${text}\n${op.value }€`;
+        return `${text}\n${op.value}€`;
       }
     },
     tooltip: {
       theme: 'dark',
       y: {
-        formatter: (value) => `${value.toFixed(2) + "€"}`
+        formatter: (value) => `${value.toFixed(2)}€`
       }
     }
   });

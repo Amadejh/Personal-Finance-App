@@ -1215,4 +1215,7 @@ input[type=email],input[type=number],input[type=password],input[type=text],selec
   margin-bottom: 1rem;
   color: var(--text)
 }
-
+#walletVsSavingsChart, #savingsBreakdownChart, #spendingChart {
+  min-height: 300px;
+  width: 100%;
+}

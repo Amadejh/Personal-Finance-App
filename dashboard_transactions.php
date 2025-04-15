@@ -16,15 +16,15 @@
 
         <label>Kategorija:</label>
         <select name="category" required>
-        <option value="">-- izberi kategorijo --</option>
+            <option value="">-- izberi kategorijo --</option>
             <option value="Hrana in pijača">Hrana in pijača</option>
             <option value="Prevoz">Prevoz</option>
-            <option value="Nakupljanje">Nakupi</option>
-            <option value="Stanovanje in računi">Nastanitev in računi</option>
+            <option value="Nakupi">Nakupi</option>
+            <option value="Nastanitv in računi">Nastanitv in računi</option>
             <option value="Plača / Dohodek">Plača / Dohodek</option>
             <option value="Zabava in prosti čas">Zabava in prosti čas</option>
             <option value="Izobraževanje">Izobraževanje</option>
-            <option value="Izobraževanje">Zdravje</option>
+            <option value="Zdravje">Zdravje</option>
             <option value="Drugo">Drugo</option>
         </select>
 
@@ -52,17 +52,19 @@
     $recent->execute();
     $res = $recent->get_result();
     while ($row = $res->fetch_assoc()):    
+      // For display, capitalize the first letter of transaction type
+      $displayType = ucfirst($row['type']);
     ?>
       <li>
-        <strong><?= ucfirst($row['type']) ?>:</strong> 
-        €<?= number_format($row['amount'], 2) ?> – 
+        <strong><?= $displayType ?>:</strong> 
+        <?= number_format($row['amount'], 2) ?>€ – 
         <?= htmlspecialchars($row['category']) ?> 
         (<?= htmlspecialchars($row['description']) ?>)<br>
         <small style="color: #999;">📅 <?= date("d.m.Y H:i", strtotime($row['created_at'])) ?></small>
-
       </li>
     <?php endwhile; $recent->close(); ?>
   </ul>
 </div>
 
   </div>
+</content>

@@ -14,24 +14,37 @@ if (!isset($_SESSION['user'])) {
 $userId = $_SESSION['user']['id'];
 run_savings_automation($userId);
 
-// ✅ Get current main_balance DIRECTLY from database (DO NOT RECALCULATE)
+// ✅ Calculate total balance from transactions and update user's main_balance
+$balanceQuery = $conn->prepare("
+    SELECT SUM(CASE 
+        WHEN type = 'nakazilo' THEN amount 
+        WHEN type = 'dvig' THEN -amount
+        WHEN type = 'prenos' THEN -amount 
+        ELSE 0 
+    END) AS calculated_balance
+    FROM transactions
+    WHERE user_id = ?
+");
+$balanceQuery->bind_param("i", $userId);
+$balanceQuery->execute();
+$balanceResult = $balanceQuery->get_result();
+$balanceData = $balanceResult->fetch_assoc();
+$calculatedBalance = $balanceData['calculated_balance'] ?? 0;
+
+// Update user's main_balance with the calculated balance
+$updateBalance = $conn->prepare("UPDATE users SET main_balance = ? WHERE id = ?");
+$updateBalance->bind_param("di", $calculatedBalance, $userId);
+$updateBalance->execute();
+$updateBalance->close();
+
+// ✅ Get current main_balance DIRECTLY from database
 $stmt = $conn->prepare("SELECT main_balance FROM users WHERE id = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
-$stmt->bind_result($main_balance);
-$stmt->fetch();
+$result = $stmt->get_result();
+$userData = $result->fetch_assoc();
+$main_balance = $userData['main_balance'];
 $stmt->close();
-
-// ✅ Calculate transaction-based balance FOR DISPLAY/ANALYTICS ONLY
-$transactionBalance = 0;
-$transactions = $conn->prepare("SELECT type, amount FROM transactions WHERE user_id = ? ORDER BY created_at ASC");
-$transactions->bind_param("i", $userId);
-$transactions->execute();
-$res = $transactions->get_result();
-while ($r = $res->fetch_assoc()) {
-    $transactionBalance += $r['type'] === 'nakazilo' ? $r['amount'] : -$r['amount'];
-}
-$transactions->close();
 
 // ✅ Monthly Income & Expenses Summary
 $startOfMonth = date('Y-m-01');
@@ -39,24 +52,36 @@ $endOfMonth = date('Y-m-t');
 
 $monthlyStmt = $conn->prepare("
     SELECT
-        SUM(CASE WHEN type = 'nakazilo' THEN amount ELSE 0 END) AS income,
-        SUM(CASE WHEN type = 'dvig' THEN amount ELSE 0 END) AS expenses
+        SUM(CASE 
+            WHEN type = 'nakazilo' AND (description IS NULL OR description NOT IN ('Zaključen cilj', 'Transfer from goal')) 
+            THEN amount ELSE 0 END) AS nakazila,
+        SUM(CASE 
+            WHEN type = 'dvig' AND (description IS NULL OR description NOT IN ('Prenos v cilj', 'Transfer to savings')) 
+            THEN amount ELSE 0 END) AS stroski,
+        SUM(CASE 
+            WHEN type = 'prenos' THEN amount ELSE 0 END) AS prenosi
     FROM transactions
     WHERE user_id = ? AND created_at BETWEEN ? AND ?
 ");
+
 $monthlyStmt->bind_param("iss", $userId, $startOfMonth, $endOfMonth);
 $monthlyStmt->execute();
-$monthlyStmt->bind_result($monthlyIncome, $monthlyExpenses);
-$monthlyStmt->fetch();
+$monthlyResult = $monthlyStmt->get_result();
+$monthlyData = $monthlyResult->fetch_assoc();
+$monthlyIncome = $monthlyData['nakazila'] ?? 0;
+$monthlyExpenses = $monthlyData['stroski'] ?? 0;
+$monthlyTransfers = $monthlyData['prenosi'] ?? 0;
 $monthlyStmt->close();
 
+
 // ✅ Cash Flow Data for Chart
-$cashFlowData = ['months' => [], 'nakazila' => [], 'dvigi' => []];
+$cashFlowData = ['months' => [], 'nakazila' => [], 'dvigi' => [], 'prenosi' => []];
 
 $flowChart = $conn->prepare("
     SELECT DATE_FORMAT(created_at, '%b %Y') AS month,
-           SUM(CASE WHEN type = 'nakazilo' THEN amount ELSE 0 END) AS nakazila,
-           SUM(CASE WHEN type = 'dvig' THEN amount ELSE 0 END) AS dvigi
+           SUM(CASE WHEN type = 'nakazilo' AND description != 'Zaključen cilj' THEN amount ELSE 0 END) AS nakazila,
+           SUM(CASE WHEN type = 'dvig' THEN amount ELSE 0 END) AS dvigi,
+           SUM(CASE WHEN type = 'prenos' THEN amount ELSE 0 END) AS prenosi
     FROM transactions
     WHERE user_id = ?
     GROUP BY YEAR(created_at), MONTH(created_at)
@@ -70,6 +95,7 @@ while ($row = $res->fetch_assoc()) {
     $cashFlowData['months'][] = $row['month'];
     $cashFlowData['nakazila'][] = (float)$row['nakazila'];
     $cashFlowData['dvigi'][] = (float)$row['dvigi'];
+    $cashFlowData['prenosi'][] = (float)$row['prenosi'];
 }
 $flowChart->close();
 
@@ -77,33 +103,46 @@ $flowChart->close();
 $totalSavings = 0;
 $savingsLabels = [];
 $savingsValues = [];
-$savingsQuery = $conn->prepare("SELECT name, balance FROM savings_accounts WHERE user_id = ?");
-$savingsQuery->bind_param("i", $userId);
-$savingsQuery->execute();
-$savingsResult = $savingsQuery->get_result();
-while ($s = $savingsResult->fetch_assoc()) {
-    $savingsLabels[] = $s['name'];
-    $savingsValues[] = (float)$s['balance'];
-    $totalSavings += (float)$s['balance'];
-}
-$savingsQuery->close();
 
-$walletVsSavingsLabels = ['Main Wallet', 'Savings'];
+// Check if savings_accounts table exists and has data
+$savingsTableExistsQuery = $conn->query("SHOW TABLES LIKE 'savings_accounts'");
+$savingsTableExists = $savingsTableExistsQuery->num_rows > 0;
+
+if ($savingsTableExists) {
+    $savingsQuery = $conn->prepare("SELECT name, balance FROM savings_accounts WHERE user_id = ?");
+    $savingsQuery->bind_param("i", $userId);
+    $savingsQuery->execute();
+    $savingsResult = $savingsQuery->get_result();
+    
+    if ($savingsResult->num_rows > 0) {
+        while ($s = $savingsResult->fetch_assoc()) {
+            $savingsLabels[] = $s['name'];
+            $savingsValues[] = (float)$s['balance'];
+            $totalSavings += (float)$s['balance'];
+        }
+      } else {
+        // No savings found for user — display nothing
+        $savingsLabels[] = 'Ni ciljev';
+        $savingsValues[] = 0;
+    } }   
+
+// ✅ Calculate wallet and savings distribution
+$walletVsSavingsLabels = ['Glavni račun', 'Varčevanje'];
 $totalNetWorth = $main_balance + $totalSavings;
 
-$walletPercent = $totalNetWorth > 0 ? ($main_balance / $totalNetWorth) * 100 : 0;
-$savingsPercent = $totalNetWorth > 0 ? ($totalSavings / $totalNetWorth) * 100 : 0;
-
-$adjustedWallet = max(0, floatval($main_balance) - floatval($totalSavings));
-$walletVsSavingsRaw = [$adjustedWallet, floatval($totalSavings)];
+// Make sure wallet amount is not negative for chart display
+$walletAmount = max(0, floatval($main_balance));
+$walletVsSavingsRaw = [$walletAmount, floatval($totalSavings)];
 
 // ✅ Spending Breakdown
 $spendingData = ['categories' => [], 'amounts' => []];
 
 $spendingStmt = $conn->prepare("
-    SELECT category, SUM(amount) AS total
+    SELECT COALESCE(category, 'Drugo') as category, SUM(amount) AS total
     FROM transactions
-    WHERE user_id = ? AND type = 'dvig'
+    WHERE user_id = ?
+      AND type = 'dvig'
+      AND (description IS NULL OR description NOT IN ('Prenos v cilj', 'Transfer to savings'))
       AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
     GROUP BY category
     ORDER BY total DESC
@@ -113,11 +152,17 @@ $spendingStmt->bind_param("i", $userId);
 $spendingStmt->execute();
 $spendingResult = $spendingStmt->get_result();
 
-while ($row = $spendingResult->fetch_assoc()) {
-    $spendingData['categories'][] = $row['category'];
-    $spendingData['amounts'][] = (float)$row['total'];
+if ($spendingResult->num_rows > 0) {
+    while ($row = $spendingResult->fetch_assoc()) {
+        $spendingData['categories'][] = $row['category'];
+        $spendingData['amounts'][] = (float)$row['total'];
+    }
+} else {
+    $spendingData['categories'][] = 'Ni podatkov o stroških';
+    $spendingData['amounts'][] = 0;
 }
 $spendingStmt->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -147,7 +192,7 @@ $spendingStmt->close();
     <div class="summary-cards">
       <div class="card">
         <h3>Skupno dobroimetje</h3>
-        <p><?= number_format($main_balance, 2) ?>€</p>
+        <p><?= number_format($totalNetWorth, 2) ?>€</p>
       </div>
       <div class="card">
         <h3>Mesečni prihodki</h3>
@@ -206,21 +251,29 @@ $spendingStmt->close();
 </div>
 
 </main>
+
 </div>
 
 <script>
+// Prepare the data for our external chart script
 const chartData = {
   walletVsSavings: {
-    labels: <?= json_encode($walletVsSavingsLabels ?? []) ?>,
-    values: <?= json_encode($walletVsSavingsRaw ?? []) ?>
+    labels: <?= json_encode($walletVsSavingsLabels) ?>,
+    values: <?= json_encode($walletVsSavingsRaw) ?>
   },
   savingsBreakdown: {
-    labels: <?= json_encode($savingsLabels ?? []) ?>,
-    values: <?= json_encode($savingsValues ?? []) ?>
+    labels: <?= json_encode($savingsLabels) ?>,
+    values: <?= json_encode($savingsValues) ?>
   },
   spending: {
-    categories: <?= json_encode($spendingData['categories'] ?? []) ?>,
-    amounts: <?= json_encode($spendingData['amounts'] ?? []) ?>
+    categories: <?= json_encode($spendingData['categories']) ?>,
+    amounts: <?= json_encode($spendingData['amounts']) ?>
+  },
+  cashFlow: {
+    months: <?= json_encode($cashFlowData['months']) ?>,
+    income: <?= json_encode($cashFlowData['nakazila']) ?>,
+    expenses: <?= json_encode($cashFlowData['dvigi']) ?>,
+    transfers: <?= json_encode($cashFlowData['prenosi']) ?>
   }
 };
 </script>
@@ -237,5 +290,6 @@ const chartData = {
 }
 </style>
 
+
 </body>
-</html> 
+</html>

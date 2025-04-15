@@ -83,9 +83,9 @@ if (empty($chartData)) {
       <div class="transactions-header">
         <h2>📋 Vse transakcije</h2>
         <div class="summary-box">
-          <p><strong>Transakcij:</strong> <?= $result->num_rows ?></p>
-          <p><strong>Skupaj porabljeno:</strong> €<?= number_format($totalSpent, 2) ?></p>
-          <p><strong>Skupaj prejeto:</strong> €<?= number_format($totalIncome, 2) ?></p>
+          <p><strong>Vse transakcije:</strong> <?= $result->num_rows ?></p>
+          <p><strong>Skupaj porabljeno:</strong> <?= number_format($totalSpent, 2) ?>€</p>
+          <p><strong>Skupaj prejeto:</strong> <?= number_format($totalIncome, 2) ?>€</p>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ if (empty($chartData)) {
           name="search" 
           id="search-input" 
           class="search-input" 
-          placeholder="Išči po datumu ali opisu..." 
+          placeholder="Išči po opisu..." 
           value="<?= htmlspecialchars($search) ?>" 
           autocomplete="off"
         >
@@ -107,7 +107,7 @@ if (empty($chartData)) {
         <?php while ($row = $result->fetch_assoc()): ?>
           <li>
             <strong><?= ucfirst($row['type']) ?>:</strong>
-            €<?= number_format($row['amount'], 2) ?> –
+            <?= number_format($row['amount'], 2) ?>€ –
             <?= htmlspecialchars($row['category']) ?>
             (<?= htmlspecialchars($row['description']) ?>)<br>
             <small style="color: var(--text-muted);">

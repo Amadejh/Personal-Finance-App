@@ -46,16 +46,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
 
             if (is_admin() && !empty($_POST['add_balance'])) {
-                $addBalance = floatval(str_replace(',', '.', $_POST['add_balance']));
-                if ($addBalance > 0) {
-                    $stmt = $conn->prepare("UPDATE users SET main_balance = main_balance + ? WHERE id = ?");
-                    $stmt->bind_param("di", $addBalance, $userId);
-                    if (!$stmt->execute()) {
-                        throw new Exception("❌ Napaka pri posodabljanju stanja.");
-                    }
-                    $_SESSION['popup'] = "✅ Dodano " . number_format($addBalance, 2) . "€";
-                }
-            }
+              $addBalance = floatval(str_replace(',', '.', $_POST['add_balance']));
+              
+              if ($addBalance > 0) {
+                  // Update main balance
+                  $stmt = $conn->prepare("UPDATE users SET main_balance = main_balance + ? WHERE id = ?");
+                  $stmt->bind_param("di", $addBalance, $userId);
+                  $stmt->execute();
+                  $stmt->close();
+          
+                  // Insert into transactions log
+                  $type = 'nakazilo';
+                  $category = 'Plača / Dohodek';
+                  $description = 'Admin';
+          
+                  $logStmt = $conn->prepare("INSERT INTO transactions (user_id, type, category, amount, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+                  $logStmt->bind_param("issds", $userId, $type, $category, $addBalance, $description);
+                  $logStmt->execute();
+                  $logStmt->close();
+          
+                  $_SESSION['popup'] = "✅ Dodano " . number_format($addBalance, 2) . "€ in zabeleženo kot transakcija.";
+              }
+          }
+          
 
             $conn->commit();
 
