@@ -49,6 +49,8 @@ $totalPages = ceil($totalGoals / $goalsPerPage);
       <a href="specific_goal.php?id=<?= $goal['id'] ?>" class="goal-card">
         <h4><?= htmlspecialchars($goal['name']) ?></h4>
         <p><strong>Autosave:</strong>
+        <br>
+        <br>
           <span class="badge <?= $goal['monthly_amount'] > 0 ? 'badge-green' : 'badge-red' ?>">
             <?= $goal['monthly_amount'] > 0 ? '🟢 Nastavljeno' : '🔴 Onemogočeno' ?>
           </span>

@@ -37,33 +37,6 @@ const globalChartOptions = {
   }
 };
 
-/*// 📊 Cash Flow Chart
-if (document.querySelector("#flowChart")) {
-  if (window.flowChartInstance) window.flowChartInstance.destroy();
-
-  window.flowChartInstance = new ApexCharts(document.querySelector("#flowChart"), {
-    ...globalChartOptions,
-    chart: { ...globalChartOptions.chart, type: 'bar' },
-    series: [
-      { name: 'Deposits', data: chartData.flowChart.deposits },
-      { name: 'Withdrawals', data: chartData.flowChart.withdrawals }
-    ],
-    xaxis: {
-      categories: chartData.flowChart.months,
-      labels: { style: { colors: '#8b8b8b' } }
-    },
-    yaxis: {
-      labels: { style: { colors: '#8b8b8b' } }
-    },
-    grid: {
-      borderColor: '#3f3f3f',
-      strokeDashArray: 4
-    },
-    colors: [chartColors.income, chartColors.expense]
-  });
-
-  window.flowChartInstance.render();
-} */
 
 // 💰 Wallet vs. Savings (Donut)
 if (document.querySelector("#walletVsSavingsChart")) {
@@ -107,12 +80,6 @@ if (document.querySelector("#walletVsSavingsChart")) {
     }
   }).render();
 }
-
-
-
-
-
-
 
 // 🎯 Savings Breakdown (Donut)
 if (document.querySelector("#savingsBreakdownChart")) {
