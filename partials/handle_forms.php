@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['new_transaction'])) {
 }
 
 
-// ➕ Create new savings account
+// ustvari nov savings/cilj
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_savings_account'])) {
     $name = trim($_POST['goal_name']);
     $goal = floatval($_POST['goal_amount']);
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_savings_accoun
     exit;
 }
 
-// 💸 Manual transfer to savings
+// ročni prenos v cilj/savings
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['transfer_to_savings'])) {
     $amount = floatval($_POST['transfer_amount']);
     $savingsId = intval($_POST['savings_account']);
@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['transfer_to_savings']
         $stmt2->execute();
         $stmt2->close();
 
-        // Record the transfer as a transaction
+        // prenos šteje kot transakcijo
         $description = "Prenos v cilj";
         $stmt3 = $conn->prepare("INSERT INTO transactions (user_id, type, amount, description, category, created_at) VALUES (?, 'prenos', ?, ?, 'Drugo', NOW())");
         $stmt3->bind_param("ids", $userId, $amount, $description);
@@ -94,11 +94,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['transfer_to_savings']
     exit;
 }
 
-// ⚙️ Setup or Stop auto-save goal for a specific savings account
+// autosave za izbran cilj
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $accountId = intval($_POST['savings_account_id'] ?? 0);
 
-    // Stop automation if requested
+    // ustavi avtomatsko varčevanje če je to zahtevano
     if (isset($_POST['stop_automation']) && $accountId > 0) {
         $stmt = $conn->prepare("UPDATE savings_accounts SET monthly_amount = 0, duration_months = 0 WHERE id = ? AND user_id = ?");
         $stmt->bind_param("ii", $accountId, $userId);
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // Proceed with setting up auto-save
+    // autosave garbage
     if (isset($_POST['setup_automation']) && $accountId > 0) {
         $months = intval($_POST['duration_months'] ?? 0);
 
@@ -151,11 +151,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
 
-// ✅ Claim (delete) savings goal and return funds to main wallet
+// celotna claim/delete logika
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
     $goalId = (int)$_POST['claim_goal_id'];
 
-    // Fetch the goal balance and name safely
+    // varno dobi ime in stanje cilja
     $goalQuery = $conn->prepare("SELECT name, balance FROM savings_accounts WHERE id = ? AND user_id = ?");
     $goalQuery->bind_param("ii", $goalId, $userId);
     $goalQuery->execute();
@@ -167,7 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
         $balanceToReturn = (float)$goal['balance'];
         $goalName = $goal['name'];
 
-        // ✅ Return funds to main wallet
+        // vrne denar v glavni račun
         $update = $conn->prepare("UPDATE users SET main_balance = main_balance + ? WHERE id = ?");
         $update->bind_param("di", $balanceToReturn, $userId);
         if (!$update->execute()) {
@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
         }
         $update->close();
 
-        // ✅ Log this return as a transaction
+        //zabeleži vrnitev kot transakcijo
         $desc = "Zaključen cilj";
         $type = 'nakazilo';
         $category = 'Drugo';
@@ -191,7 +191,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
         }
         $log->close();
 
-        // ✅ Delete the goal
+        // zbriše cilj
         $delete = $conn->prepare("DELETE FROM savings_accounts WHERE id = ? AND user_id = ?");
         $delete->bind_param("ii", $goalId, $userId);
         if (!$delete->execute()) {

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ POPUP LOGIC
+  // ✅ POPUP logika
   const popup = document.getElementById("popup");
   if (popup) {
     popup.style.opacity = "1";
@@ -14,32 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 3000);
   }
 
-  // ✅ SIDEBAR TOGGLE LOGIC
-  const sidebarToggle = document.getElementById("sidebarToggle");
-  const body = document.body;
 
-  if (sidebarToggle) {
-    sidebarToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      body.classList.toggle("sidebar-open");
-    });
-  }
-
-  document.addEventListener("click", (e) => {
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar && !sidebar.contains(e.target) && !e.target.closest('#sidebarToggle')) {
-      body.classList.remove("sidebar-open");
-    }
-  });
-
-  const sidebar = document.getElementById("sidebar");
-  if (sidebar) {
-    sidebar.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-  }
-
-  // ✅ LIVE SEARCH SUGGESTIONS (all_transactions.php)
+  // live search suggestions za all_transactions.php
   const searchInput = document.getElementById("search-input");
   const suggestionList = document.getElementById("suggestion-list");
 
@@ -67,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
               searchInput.value = suggestion;
               suggestionList.innerHTML = "";
               suggestionList.style.display = "none";
-              searchInput.form.submit(); // Trigger search
+              searchInput.form.submit(); 
             });
             suggestionList.appendChild(li);
           });
@@ -76,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // ✅ Safely handle outside click
+    // ✅ handler za klik zunaj suggestion seznama
     document.addEventListener("click", (e) => {
       if (
         suggestionList &&

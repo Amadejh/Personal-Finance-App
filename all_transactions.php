@@ -10,7 +10,7 @@ if (!isset($_SESSION['user'])) {
 $userId = $_SESSION['user']['id'];
 $search = $_GET['search'] ?? '';
 
-// Fetch transactions
+// pridobi transakcije
 $stmt = $conn->prepare("
   SELECT type, category, amount, description, created_at
   FROM transactions
@@ -21,7 +21,7 @@ $stmt->bind_param("iss", $userId, $search, $search);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Summary: total spent and income
+// skupaj zapravljeno in prihodek
 $summaryStmt = $conn->prepare("
   SELECT 
     SUM(CASE WHEN type = 'dvig' THEN amount ELSE 0 END) AS total_spent,
@@ -35,7 +35,7 @@ $summaryResult = $summaryStmt->get_result()->fetch_assoc();
 $totalSpent = $summaryResult['total_spent'] ?? 0;
 $totalIncome = $summaryResult['total_income'] ?? 0;
 
-// Last 7 days 
+// zadnjih 7 dni 
 $chartStmt = $conn->prepare("
   SELECT category, SUM(amount) as total
   FROM transactions
@@ -56,7 +56,7 @@ while ($row = $chartResult->fetch_assoc()) {
   ];
 }
 
-// Fallback if no chart data
+// Fallback če ni podatkov za graf
 if (empty($chartData)) {
   $chartData = [['x' => 'Ni stroškov', 'y' => 1]];
 }

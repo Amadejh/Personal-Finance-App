@@ -24,9 +24,9 @@ if (!$goal) {
     exit;
 }
 
-// ✅ Redirect only if goal is already claimed
+// redirect samo ce je cilj ze claimed
 if ($goal['balance'] >= $goal['goal_amount']) {
-  // If it's not claimed yet, mark as complete and disable autosave
+  // ce ni ga oznaci kot complete in ugasni autosave
   if (!$goal['is_claimed']) {
       $stmt = $conn->prepare("UPDATE savings_accounts SET monthly_amount = 0 WHERE id = ?");
       $stmt->bind_param("i", $goalId);
@@ -34,7 +34,7 @@ if ($goal['balance'] >= $goal['goal_amount']) {
       $stmt->close();
   }
 
-  // Redirect unless it's claimable view
+  //redirect razen ce je claimable
   if (!isset($_GET['claim_view'])) {
       header("Location: dashboard.php");
       exit;
@@ -53,10 +53,10 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
 </head>
 <body class="dashboard-page">
 
-<!-- ✅ Top Navbar -->
+<!-- top navbar -->
 <?php include 'partials/navbar.php'; ?>
 
-<!-- ✅ Main Content -->
+<!-- main content -->
 
 <div class="page-content">
 <main class="goal-detail-page">
@@ -83,9 +83,9 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
       <?php endif; ?>
     </p>
 
-<!-- 🧾 Action Forms -->
+<!-- forms za dodajanje novih sredstev -->
 <div class="flex-row" style="gap: 2rem; margin-top: 2rem;">
-  <!-- 💸 Manual Transfer -->
+  <!-- form za rocni premik -->
   <div style="flex: 1;">
     <form method="post" class="goal-form">
       <h4>💸 Dodaj sredstva</h4>
@@ -96,7 +96,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
     </form>
   </div>
 
-  <!-- ⚙️ Auto Save -->
+  <!-- autosave-->
   <div style="flex: 1;">
     <form method="post" class="goal-form">
       <h4>⚙️ Auto Save</h4>
@@ -107,7 +107,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
     </form>
 
     <?php if ($goal['monthly_amount'] > 0): ?>
-      <!-- 🔴 Stop Autosave -->
+      <!-- stop autosave -->
       <form method="post" style="margin-top: 1rem;">
         <input type="hidden" name="stop_automation" value="1">
         <input type="hidden" name="savings_account_id" value="<?= $goal['id'] ?>">
@@ -120,7 +120,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
 <hr>
 
 
-    <!-- 🗑️ Delete Goal -->
+    <!-- briši cilj -->
     <form method="post" action="dashboard.php" onsubmit="return confirm('Ali res želiš izbrisati ta cilj?');">
       <input type="hidden" name="delete_savings_account_id" value="<?= $goal['id'] ?>">
       <button type="submit" class="danger">🗑️ Izbriši cilj</button>

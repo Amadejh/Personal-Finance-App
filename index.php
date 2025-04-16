@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["email"], $_POST["pass
 
 <pre>
 <?/*php
-// 🔍 Debug incoming form data
+// 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     var_dump($_POST);
 }*/

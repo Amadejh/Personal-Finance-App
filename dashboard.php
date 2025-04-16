@@ -4,17 +4,17 @@ require_once 'includes/auth.php';
 require_once 'partials/handle_forms.php';
 require_once 'includes/savings_automation.php';
 
-// Redirect if not logged in
+// Redirect če nisi logged in
 if (!isset($_SESSION['user'])) {
     header("Location: index.php");
     exit();
 }
 
-// Get current user data
+// pridobi podatke trenutnega uporabnika
 $userId = $_SESSION['user']['id'];
 run_savings_automation($userId);
 
-// ✅ Calculate total balance from transactions and update user's main_balance
+// izračuna skupno stanje iz transakcij in posodobi glavni račun
 $balanceQuery = $conn->prepare("
     SELECT SUM(CASE 
         WHEN type = 'nakazilo' THEN amount 
@@ -31,13 +31,13 @@ $balanceResult = $balanceQuery->get_result();
 $balanceData = $balanceResult->fetch_assoc();
 $calculatedBalance = $balanceData['calculated_balance'] ?? 0;
 
-// Update user's main_balance with the calculated balance
+// update glavni račun samo če je drugačen od trenutnega
 $updateBalance = $conn->prepare("UPDATE users SET main_balance = ? WHERE id = ?");
 $updateBalance->bind_param("di", $calculatedBalance, $userId);
 $updateBalance->execute();
 $updateBalance->close();
 
-// ✅ Get current main_balance DIRECTLY from database
+// pridobi trenutno stanje glavnega računa
 $stmt = $conn->prepare("SELECT main_balance FROM users WHERE id = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
@@ -46,7 +46,7 @@ $userData = $result->fetch_assoc();
 $main_balance = $userData['main_balance'];
 $stmt->close();
 
-// ✅ Monthly Income & Expenses Summary
+// summary cards podatki
 $startOfMonth = date('Y-m-01');
 $endOfMonth = date('Y-m-t');
 
@@ -74,37 +74,13 @@ $monthlyTransfers = $monthlyData['prenosi'] ?? 0;
 $monthlyStmt->close();
 
 
-// ✅ Cash Flow Data for Chart
-$cashFlowData = ['months' => [], 'nakazila' => [], 'dvigi' => [], 'prenosi' => []];
 
-$flowChart = $conn->prepare("
-    SELECT DATE_FORMAT(created_at, '%b %Y') AS month,
-           SUM(CASE WHEN type = 'nakazilo' AND description != 'Zaključen cilj' THEN amount ELSE 0 END) AS nakazila,
-           SUM(CASE WHEN type = 'dvig' THEN amount ELSE 0 END) AS dvigi,
-           SUM(CASE WHEN type = 'prenos' THEN amount ELSE 0 END) AS prenosi
-    FROM transactions
-    WHERE user_id = ?
-    GROUP BY YEAR(created_at), MONTH(created_at)
-    ORDER BY YEAR(created_at), MONTH(created_at)
-");
-$flowChart->bind_param("i", $userId);
-$flowChart->execute();
-$res = $flowChart->get_result();
-
-while ($row = $res->fetch_assoc()) {
-    $cashFlowData['months'][] = $row['month'];
-    $cashFlowData['nakazila'][] = (float)$row['nakazila'];
-    $cashFlowData['dvigi'][] = (float)$row['dvigi'];
-    $cashFlowData['prenosi'][] = (float)$row['prenosi'];
-}
-$flowChart->close();
-
-// ✅ Savings Breakdown
+// analiza stroskov 
 $totalSavings = 0;
 $savingsLabels = [];
 $savingsValues = [];
 
-// Check if savings_accounts table exists and has data
+// poglej ce tabela savings_accounts obstaja 
 $savingsTableExistsQuery = $conn->query("SHOW TABLES LIKE 'savings_accounts'");
 $savingsTableExists = $savingsTableExistsQuery->num_rows > 0;
 
@@ -121,20 +97,20 @@ if ($savingsTableExists) {
             $totalSavings += (float)$s['balance'];
         }
       } else {
-        // No savings found for user — display nothing
+        // ce ne najde savingsou ne prikaze nic
         $savingsLabels[] = 'Ni ciljev';
         $savingsValues[] = 0;
     } }   
 
-// ✅ Calculate wallet and savings distribution
+// izracuna ratio med glavnim racunom in varcevanjem
 $walletVsSavingsLabels = ['Glavni račun', 'Varčevanje'];
 $totalNetWorth = $main_balance + $totalSavings;
 
-// Make sure wallet amount is not negative for chart display
+// glavni racun ne sme bit negativen
 $walletAmount = max(0, floatval($main_balance));
 $walletVsSavingsRaw = [$walletAmount, floatval($totalSavings)];
 
-// ✅ Spending Breakdown
+// analiza stroskov
 $spendingData = ['categories' => [], 'amounts' => []];
 
 $spendingStmt = $conn->prepare("
@@ -255,7 +231,7 @@ $spendingStmt->close();
 </div>
 
 <script>
-// Prepare the data for our external chart script
+// pošlje data v JS
 const chartData = {
   walletVsSavings: {
     labels: <?= json_encode($walletVsSavingsLabels) ?>,
@@ -269,12 +245,6 @@ const chartData = {
     categories: <?= json_encode($spendingData['categories']) ?>,
     amounts: <?= json_encode($spendingData['amounts']) ?>
   },
-  cashFlow: {
-    months: <?= json_encode($cashFlowData['months']) ?>,
-    income: <?= json_encode($cashFlowData['nakazila']) ?>,
-    expenses: <?= json_encode($cashFlowData['dvigi']) ?>,
-    transfers: <?= json_encode($cashFlowData['prenosi']) ?>
-  }
 };
 </script>
 
