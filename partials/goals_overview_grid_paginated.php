@@ -1,10 +1,9 @@
 <?php
-// Pagination Setup
+// paginacija setup
 $goalsPerPage = 6;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $goalsPerPage;
 
-// Fetch paginated goals (FILO order)
 $stmt = $conn->prepare("
     SELECT id, name, balance, goal_amount, monthly_amount
     FROM savings_accounts
@@ -17,7 +16,7 @@ $stmt->execute();
 $goals = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Total goal count for pagination
+// prešteje cilje za paginacijo
 $countStmt = $conn->prepare("SELECT COUNT(*) FROM savings_accounts WHERE user_id = ?");
 $countStmt->bind_param("i", $userId);
 $countStmt->execute();
@@ -62,7 +61,7 @@ $totalPages = ceil($totalGoals / $goalsPerPage);
   <?php endforeach; ?>
       </div>
 
-<!-- Pagination -->
+<!-- strani -->
 <?php if ($totalPages > 1): ?>
   <div class="pagination">
     <?php for ($i = 1; $i <= $totalPages; $i++): ?>

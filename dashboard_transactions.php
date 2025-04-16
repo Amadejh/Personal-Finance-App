@@ -1,4 +1,4 @@
-<!-- 💸 Transactions Section -->
+<!-- transakcije na dashboardu -->
 
   <div class="flex-row">
     <!-- ➕ Nova transakcija -->
@@ -52,7 +52,7 @@
     $recent->execute();
     $res = $recent->get_result();
     while ($row = $res->fetch_assoc()):    
-      // For display, capitalize the first letter of transaction type
+      // za prikaz da prvo črko veliko tiskano
       $displayType = ucfirst($row['type']);
     ?>
       <li>

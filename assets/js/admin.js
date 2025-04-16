@@ -1,11 +1,11 @@
-// ✅ Load users via AJAX
+// ✅ Nalaganje uporabnikov z AJAX
 function loadUsers(search = '', page = 1) {
   $.get("search_users.php", { search, page }, function (data) {
     $("#user-list").html(data);
   });
 }
 
-// ✅ Autocomplete handler
+// ✅ Autocomplete funkcija za search_users.php
 function setupAutocomplete(inputId) {
   const input = document.getElementById(inputId);
   let currentFocus = -1;
@@ -20,7 +20,7 @@ function setupAutocomplete(inputId) {
 
       const list = document.createElement("DIV");
       list.setAttribute("id", inputId + "-autocomplete-list");
-      list.setAttribute("class", "suggestions-box animated-dropdown"); // ✅ Updated class name
+      list.setAttribute("class", "suggestions-box animated-dropdown"); 
       input.parentNode.appendChild(list);
 
       suggestions.forEach(suggestion => {
@@ -82,28 +82,28 @@ function setupAutocomplete(inputId) {
   });
 }
 
-// ✅ jQuery on ready
+
 $(function () {
   loadUsers();
   setupAutocomplete("search-input");
 
-  // Manual typing fallback
+ 
   $("#search-input").on("keyup", function () {
     const value = $(this).val();
     loadUsers(value);
   });
 
-// ✅ Simple fade-in and fade-out popup (no slide)
+// ✅ Fadein Fadeout popup logika
 const popup = document.getElementById("popup");
 if (popup) {
-  // Appear instantly
+  // Takoj se prikaže
   popup.style.opacity = "1";
   popup.style.transition = "opacity 0.5s ease";
 
-  // Fade-out after 3 seconds
+  // Počasi pojenja
   setTimeout(() => {
     popup.style.opacity = "0";
-    setTimeout(() => popup.remove(), 500); // Matches fade-out duration
+    setTimeout(() => popup.remove(), 500); 
   }, 2500);
 }
 

@@ -49,13 +49,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               $addBalance = floatval(str_replace(',', '.', $_POST['add_balance']));
               
               if ($addBalance > 0) {
-                  // Update main balance
+                  // posodobi glavni račun
                   $stmt = $conn->prepare("UPDATE users SET main_balance = main_balance + ? WHERE id = ?");
                   $stmt->bind_param("di", $addBalance, $userId);
                   $stmt->execute();
                   $stmt->close();
           
-                  // Insert into transactions log
+                  // transakcijo zapiše v database
                   $type = 'nakazilo';
                   $category = 'Plača / Dohodek';
                   $description = 'Admin';

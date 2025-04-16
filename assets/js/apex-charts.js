@@ -1,4 +1,4 @@
-// 🎨 Balanced dark theme chart styling
+// barve
 const chartColors = {
   allocation: ['#a9d9ae', '#b6dfba', '#c2e4c5'], // soft greens
   spending: ['#b6dfba', '#a9d9ae', '#c2e4c5', '#cee9d0'], // consistent pastel range
@@ -8,7 +8,7 @@ const chartColors = {
 
 
 
-// 🌐 Global chart options
+// globalne chart nastavitve
 const globalChartOptions = {
   chart: {
     height: 300,
@@ -38,7 +38,7 @@ const globalChartOptions = {
 };
 
 
-// 💰 Wallet vs. Savings (Donut)
+//  Razmerje med glavnim in varčevalnimi
 if (document.querySelector("#walletVsSavingsChart")) {
   new ApexCharts(document.querySelector("#walletVsSavingsChart"), {
     chart: {
@@ -52,8 +52,8 @@ if (document.querySelector("#walletVsSavingsChart")) {
       }
     },
     labels: chartData.walletVsSavings.labels,
-    series: chartData.walletVsSavings.values, // this now holds raw values (wallet + savings)
- // use raw values here
+    series: chartData.walletVsSavings.values, 
+ 
     colors: ['#34D399', '#0EA5E9'],
     legend: {
       show: false
@@ -61,7 +61,7 @@ if (document.querySelector("#walletVsSavingsChart")) {
     dataLabels: {
       enabled: true,
       formatter: function (val) {
-        return val.toFixed(1) + "%"; // label shows %
+        return val.toFixed(1) + "%"; 
       },
       style: {
         fontSize: '14px'
@@ -81,7 +81,7 @@ if (document.querySelector("#walletVsSavingsChart")) {
   }).render();
 }
 
-// 🎯 Savings Breakdown (Donut)
+// varčevalni cilji
 if (document.querySelector("#savingsBreakdownChart")) {
   new ApexCharts(document.querySelector("#savingsBreakdownChart"), {
     chart: {
@@ -122,7 +122,7 @@ if (document.querySelector("#savingsBreakdownChart")) {
 }
 
 
-// 💸 Spending Analysis (Treemap)
+// analiza stroškov
 if (
   document.querySelector("#spendingChart") &&
   chartData.spending.categories.length > 0 &&

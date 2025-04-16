@@ -32,7 +32,7 @@ function run_savings_automation(int $userId): void
         }
 
         if ($shouldRun) {
-            // Check main balance
+            // preveri glavni račun
             $balQ = $conn->prepare("SELECT main_balance FROM users WHERE id = ?");
             $balQ->bind_param("i", $userId);
             $balQ->execute();
@@ -43,10 +43,10 @@ function run_savings_automation(int $userId): void
             if ($mainBal >= $monthly) {
                 $conn->begin_transaction();
 
-                // 1. Subtract from main
+                // 1. odštej od glavnega računa
                 $conn->query("UPDATE users SET main_balance = main_balance - $monthly WHERE id = $userId");
 
-                // 2. Add to savings account
+                // 2. dodaj v varčevalni račun/cilj
                 $conn->query("UPDATE savings_accounts SET balance = balance + $monthly, last_auto_transfer = NOW() WHERE id = $accountId");
 
                 $conn->commit();

@@ -1,12 +1,12 @@
 <?php
-// ✅ Ensure session is started
+//  Poskrbi da je session pričet
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
 require_once __DIR__ . '/../../includes/db.php';
 
-// ➕ Create New User
+//  Ustvari novega uporabnika
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
     $newName = trim($_POST['new_name']);
     $newLastname = trim($_POST['new_lastname']);
@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
     exit();
 }
 
-// 📝 Edit Existing User
+//  Uredi obstoječega uporabnika
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_user'])) {
     $editId = $_POST['edit_user_id'];
     $editName = trim($_POST['edit_name']);
@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_user'])) {
     $editEmail = trim($_POST['edit_email']);
     $editRole = $_POST['edit_role'];
 
-    // Check if password was provided
+    // Preveri geslo
     $passwordUpdate = "";
     if (!empty($_POST['edit_password'])) {
         $newPassword = password_hash($_POST['edit_password'], PASSWORD_DEFAULT);
@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_user'])) {
     exit();
 }
 
-// 💸 Simulate Transaction
+//  Simulacija transakcije
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['add_transaction'])) {
     $userId = $_POST['user_id'];
     $type = $_POST['type'];
@@ -100,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['add_transaction'])) {
     exit();
 }
 
-// ❌ Delete User
+// Brisanje uporabnika
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['delete_user'])) {
     $deleteId = $_POST['edit_user_id'];
 

@@ -22,7 +22,7 @@ if ($q !== '') {
     while ($row = $res->fetch_assoc()) {
         $suggestions[] = [
             'label' => $row['label'],
-            'value' => $row['email']  // actual value used in search
+            'value' => $row['email']  
         ];
     }
 }

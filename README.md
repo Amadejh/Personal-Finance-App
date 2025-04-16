@@ -1,2 +1,1 @@
-readme whatever
-"# Personal-Finance-App" 
+CSS je najslabši najbolj ogabn najbolj neumn language mozn
