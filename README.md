@@ -1,1 +1,3 @@
-CSS je najslabši najbolj ogabn najbolj neumn language mozn
+## Personal finance app  
+
+Aplikacija za intuitivno vodenje osebnih financ!
