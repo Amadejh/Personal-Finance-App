@@ -161,6 +161,18 @@ $spendingStmt->close();
   </div>
 <?php endif; ?>
 
+<?php if (isset($_SESSION['automation_results'])): ?>
+  <div class="card" style="margin-bottom: 20px;">
+    <h3><?= $_SESSION['automation_summary'] ?? "Avtomatski prenosi" ?></h3>
+    <ul>
+      <?php foreach ($_SESSION['automation_results'] as $result): ?>
+        <li><?= $result ?></li>
+      <?php endforeach; ?>
+    </ul>
+  </div>
+  <?php unset($_SESSION['automation_results'], $_SESSION['automation_summary']); ?>
+<?php endif; ?>
+
 <main class="analytics-dashboard">
 
 <div class="dashboard-grid">
