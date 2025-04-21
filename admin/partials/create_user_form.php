@@ -1,6 +1,7 @@
 <div class="card wide">
     <h3>➕ Ustvari novega uporabnika</h3>
     <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="create_user" value="1">
 
         <label style="font-weight: bold; display: block;">Ime:</label>

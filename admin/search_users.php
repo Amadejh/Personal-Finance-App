@@ -28,6 +28,7 @@ while ($row = $result->fetch_assoc()):
 ?>
 <div class="user-card">
 <form method="post" class="edit-form" style="margin-bottom: 20px;">
+<input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
     <input type="hidden" name="edit_user_id" value="<?= $row['id']; ?>">
 
     <label>Ime:</label>

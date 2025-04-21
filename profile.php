@@ -135,6 +135,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <h2 class="profile-title">👤 Moj profil</h2>
 
   <form method="post">
+  <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
     <input type="hidden" name="update_account" value="1">
 
     <div class="form-row">
@@ -176,11 +177,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
   <form method="post" style="margin: 0;">
+  <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
     <input type="hidden" name="update_account" value="1">
     <button type="submit" class="btn-save">💾 Shrani spremembe</button>
   </form>
 
   <form method="post" onsubmit="return confirm('Ali si prepričan, da želiš izbrisati svoj račun? To dejanje je nepovratno.');" style="margin: 0;">
+  <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
     <input type="hidden" name="delete_account" value="1">
     <button type="submit" class="btn-delete">🗑️ Izbriši račun</button>
   </form>

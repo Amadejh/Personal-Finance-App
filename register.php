@@ -50,6 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <?php endif; ?>
 
     <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="text" name="name" placeholder="Ime" required>
         <input type="text" name="lastname" placeholder="Priimek" required>
         <input type="email" name="email" placeholder="Email" required>

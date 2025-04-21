@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ POPUP logika
+  //  POPUP logika
   const popup = document.getElementById("popup");
   if (popup) {
     popup.style.opacity = "1";
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // ✅ handler za klik zunaj suggestion seznama
+    //  handler za klik zunaj suggestion seznama
     document.addEventListener("click", (e) => {
       if (
         suggestionList &&

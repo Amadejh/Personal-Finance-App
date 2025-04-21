@@ -1,4 +1,5 @@
 <form method="POST">
+<input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
   <input type="hidden" name="transfer_to_savings" value="1">
 
   <label for="transfer_amount">Znesek:</label>

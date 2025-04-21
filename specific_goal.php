@@ -88,6 +88,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
   <!-- form za rocni premik -->
   <div style="flex: 1;">
     <form method="post" class="goal-form">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
       <h4>💸 Dodaj sredstva</h4>
       <input type="hidden" name="transfer_to_savings" value="1">
       <input type="hidden" name="savings_account" value="<?= $goal['id'] ?>">
@@ -99,6 +100,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
   <!-- autosave-->
   <div style="flex: 1;">
     <form method="post" class="goal-form">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
       <h4>⚙️ Auto Save</h4>
       <input type="hidden" name="setup_automation" value="1">
       <input type="hidden" name="savings_account_id" value="<?= $goal['id'] ?>">
@@ -109,6 +111,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
     <?php if ($goal['monthly_amount'] > 0): ?>
       <!-- stop autosave -->
       <form method="post" style="margin-top: 1rem;">
+      <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="stop_automation" value="1">
         <input type="hidden" name="savings_account_id" value="<?= $goal['id'] ?>">
         <button type="submit" class="danger">⏹️ Ustavi avtomatsko varčevanje</button>
@@ -122,6 +125,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
 
     <!-- briši cilj -->
     <form method="post" action="dashboard.php" onsubmit="return confirm('Ali res želiš izbrisati ta cilj?');">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
       <input type="hidden" name="delete_savings_account_id" value="<?= $goal['id'] ?>">
       <button type="submit" class="danger">🗑️ Izbriši cilj</button>
     </form>

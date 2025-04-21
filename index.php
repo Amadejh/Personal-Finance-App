@@ -45,6 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["email"], $_POST["pass
     <h2>Prijava</h2>
     <?php if (!empty($error)) echo "<p class='error'>$error</p>"; ?>
     <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="email" name="email" placeholder="Email" required><br>
         <input type="password" name="password" placeholder="Geslo" required><br>
         <button type="submit">Prijavi se</button>

@@ -5,6 +5,7 @@
     <div class="card" style="flex: 1; margin-right: 1rem;">
       <h3>➕ Nova transakcija</h3>
       <form method="post">
+      <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="new_transaction" value="1">
 
         <label>Vrsta transakcije:</label>

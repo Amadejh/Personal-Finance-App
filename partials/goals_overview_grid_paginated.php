@@ -38,6 +38,7 @@ $totalPages = ceil($totalGoals / $goalsPerPage);
         <h4><?= htmlspecialchars($goal['name']) ?></h4>
         <p style="text-align:center; font-size: 1.2rem;">🎉 Cilj dosežen</p>
         <form method="post" onsubmit="return confirm('Ali res želiš izplačati prihranke?');" style="text-align:center;">
+        <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
           <input type="hidden" name="claim_goal_id" value="<?= $goal['id'] ?>">
           <button type="submit" class="claim-button">izplačaj prihranke</button>
           <p><?= number_format($goal['balance'], 2) ?>€</p>

@@ -1,4 +1,5 @@
 <form method="POST">
+<input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
   <label for="goal_name">Ime cilja</label>
   <input type="text" name="goal_name" id="goal_name" required>
 

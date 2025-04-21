@@ -90,6 +90,7 @@ if (empty($chartData)) {
       </div>
 
       <form method="GET" class="form-container" style="position: relative;">
+      <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input 
           type="text" 
           name="search" 

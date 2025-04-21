@@ -2,6 +2,7 @@
     <h3>💸 Simuliraj transakcijo</h3>
 
     <form method="post">
+    <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="add_transaction" value="1">
 
         <label style="font-weight: bold; display: block;">Uporabnik:</label>

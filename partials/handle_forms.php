@@ -5,6 +5,14 @@ ini_set('error_log', __DIR__ . '/logs/php-error.log');
 require_once __DIR__ . '/../includes/db.php';
 
 
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        $_SESSION['popup'] = "⚠️ Neveljavna zahteva. Poskusite znova.";
+        $_SESSION['popup_type'] = "error";
+        header("Location: " . $_SERVER['HTTP_REFERER'] ?? 'dashboard.php');
+        exit;
+    }
+
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (!isset($_SESSION['user'])) return;
 
@@ -209,7 +217,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
     header("Location: dashboard.php");
     exit;
 }
-
+}
 
 
 
