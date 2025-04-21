@@ -40,14 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["email"], $_POST["pass
 </head>
 <body class="login-page">
 
-<pre>
-<?/*php
-// 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    var_dump($_POST);
-}*/
-?>
-</pre>
 
 <div class="form-container">
     <h2>Prijava</h2>
