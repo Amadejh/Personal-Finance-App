@@ -8,22 +8,27 @@ $userId = $_SESSION['user']['id'];
 $success = '';
 $error = '';
 
+// Pridobi podatke trenutnega uporabnika
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
+// Obdelava obrazca za posodobitev profila
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['update_account'])) {
+        // Uporabi transakcijo za zagotovitev konsistentnosti
         $conn->begin_transaction();
         try {
+            // Pridobi in očisti vnosna polja
             $newName = trim($_POST['name']);
             $newLastname = trim($_POST['lastname']);
             $newGender = $_POST['gender'];
             $newEmail = trim($_POST['email']);
             $newPassword = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
 
+            // Preveri, če email že obstaja pri drugem uporabniku
             $check = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
             $check->bind_param("si", $newEmail, $userId);
             $check->execute();
@@ -33,6 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 throw new Exception("⚠️ Ta email je že v uporabi.");
             }
 
+            // Različna SQL stavka glede na to, ali se posodablja geslo
             if ($newPassword) {
                 $stmt = $conn->prepare("UPDATE users SET name=?, lastname=?, gender=?, email=?, password=? WHERE id=?");
                 $stmt->bind_param("sssssi", $newName, $newLastname, $newGender, $newEmail, $newPassword, $userId);
@@ -45,17 +51,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 throw new Exception("❌ Napaka pri posodabljanju profila.");
             }
 
+            // Dodatna logika za administratorje - dodajanje sredstev
             if (is_admin() && !empty($_POST['add_balance'])) {
               $addBalance = floatval(str_replace(',', '.', $_POST['add_balance']));
               
               if ($addBalance > 0) {
-                  // posodobi glavni račun
+                  // Posodobi glavni račun
                   $stmt = $conn->prepare("UPDATE users SET main_balance = main_balance + ? WHERE id = ?");
                   $stmt->bind_param("di", $addBalance, $userId);
                   $stmt->execute();
                   $stmt->close();
           
-                  // transakcijo zapiše v database
+                  // Zabeleži transakcijo v bazo
                   $type = 'nakazilo';
                   $category = 'Plača / Dohodek';
                   $description = 'Admin';
@@ -69,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               }
           }
           
-
+            // Zaključi transakcijo in posodobi podatke v seji
             $conn->commit();
 
             $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
@@ -79,6 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $_SESSION['popup'] = $_SESSION['popup'] ?? "✅ Spremembe uspešno shranjene.";
         } catch (Exception $e) {
+            // V primeru napake razveljavi spremembe
             $conn->rollback();
             $_SESSION['popup'] = $e->getMessage();
         }
@@ -87,13 +95,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
+    // Brisanje uporabniškega računa
     if (isset($_POST['delete_account'])) {
         $conn->begin_transaction();
         try {
+            // Najprej izbriši vse transakcije uporabnika
             $stmt = $conn->prepare("DELETE FROM transactions WHERE user_id = ?");
             $stmt->bind_param("i", $userId);
             $stmt->execute();
 
+            // Nato izbriši uporabnika
             $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
             $stmt->bind_param("i", $userId);
             $stmt->execute();
@@ -139,6 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <input type="hidden" name="update_account" value="1">
 
     <div class="form-row">
+      <!-- Prvi stolpec: osnovni podatki -->
       <div class="profile-box">
         <label>Ime:</label>
         <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>" required>
@@ -147,6 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <input type="text" name="lastname" value="<?= htmlspecialchars($user['lastname']) ?>" required>
       </div>
 
+      <!-- Drugi stolpec: kontaktni podatki in geslo -->
       <div class="profile-box">
         <label>Email:</label>
         <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" required>
@@ -157,6 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </div>
 
     <div class="profile-box">
+      <!-- Izbira spola -->
       <div class="gender-section">
         <div class="gender-label">
           <label>Spol:</label>
@@ -168,6 +182,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
       </div>
 
+      <!-- Admin: dodatna možnost za dodajanje sredstev -->
       <?php if (is_admin()): ?>
         <div class="profile-box">
           <label>💵 Dodaj sredstva v glavni račun:</label>
@@ -175,6 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
       <?php endif; ?>
 
+      <!-- Gumbi za upravljanje profila -->
       <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
   <form method="post" style="margin: 0;">
   <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">

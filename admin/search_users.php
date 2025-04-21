@@ -2,28 +2,30 @@
 require_once '../includes/db.php';
 require_once '../includes/auth.php';
 
+// Preveri, če je uporabnik admin - ščiti dostop do API-ja
 if (!is_admin()) exit;
 
+// Pridobi iskalni niz in nastavi paginacijo
 $search = isset($_GET['search']) ? "%" . $_GET['search'] . "%" : '%';
 $limit = 5;
 
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $limit;
 
-
-// Podatki
+// Pridobi podatke filtrirane po iskanju
 $stmt = $conn->prepare("SELECT * FROM users WHERE role != 'admin' AND email LIKE ? LIMIT ? OFFSET ?");
 $stmt->bind_param("sii", $search, $limit, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Skupno število
+// Pridobi skupno število za paginacijo
 $countStmt = $conn->prepare("SELECT COUNT(*) as total FROM users WHERE role != 'admin' AND email LIKE ?");
 $countStmt->bind_param("s", $search);
 $countStmt->execute();
 $total = $countStmt->get_result()->fetch_assoc()['total'];
 $totalPages = ceil($total / $limit);
 
+// Generiraj HTML za vsak element v rezultatih
 while ($row = $result->fetch_assoc()):
 ?>
 <div class="user-card">
@@ -58,5 +60,3 @@ while ($row = $result->fetch_assoc()):
 
 </div>
 <?php endwhile; ?>
-
-

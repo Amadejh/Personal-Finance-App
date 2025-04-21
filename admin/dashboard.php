@@ -3,7 +3,7 @@ require_once '../includes/auth.php';
 require_once '../includes/db.php';
 require_once __DIR__ . '/partials/handle_forms.php';
 
-
+// Preveri, če je uporabnik admin - če ni, ga preusmeri
 if (!is_admin()) {
     header("Location: ../index.php");
     exit;
@@ -26,17 +26,16 @@ $user = $_SESSION['user'];
 
 <body class="admin-page">
 
-<!-- 🔝 NAVIGACIJA -->
+<!-- 🔝 Navigacijska vrstica -->
 <?php include '../partials/navbar.php'; ?>
 
-
-<!-- ✅ POPUP za uspeh/error -->
+<!-- ✅ Popup okno za obvestila o uspehu/napaki -->
 <?php include 'partials/popup.php'; ?>
-
 
 <div class="page-content">
 <div class="admin-container">
 
+  <!-- Zgornja vrstica z obrazci za ustvarjanje uporabnikov in simulacijo transakcij -->
   <div class="admin-top-row">
     <div class="admin-card">
       <?php include 'partials/create_user_form.php'; ?>
@@ -47,6 +46,7 @@ $user = $_SESSION['user'];
     </div>
   </div>
 
+  <!-- Seznam uporabnikov z AJAX iskanjem -->
   <div class="admin-section">
     <?php include 'partials/user_list_ajax.php'; ?>
   </div>
@@ -54,7 +54,7 @@ $user = $_SESSION['user'];
 </div>
 </div>
 
-<!-- ✅ Skripti -->
+<!-- ✅ JavaScript funkcije za admin panel -->
 <script src="../assets/js/admin.js"></script>
 
 </body>

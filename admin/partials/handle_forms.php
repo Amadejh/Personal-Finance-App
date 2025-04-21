@@ -1,13 +1,14 @@
 <?php
-//  Poskrbi da je session pričet
+// Poskrbi, da je seja začeta
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
 require_once __DIR__ . '/../../includes/db.php';
 
-//  Ustvari novega uporabnika
+// Ustvari novega uporabnika (za admin panel)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
+    // Pridobi in očisti vhodne podatke
     $newName = trim($_POST['new_name']);
     $newLastname = trim($_POST['new_lastname']);
     $newEmail = trim($_POST['new_email']);
@@ -15,6 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
     $newPassword = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
     $newRole = $_POST['new_role'];
 
+    // Preveri, če uporabnik s tem emailom že obstaja
     $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $check->bind_param("s", $newEmail);
     $check->execute();
@@ -24,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
         $_SESSION['popup'] = "⚠️ Uporabnik s tem emailom že obstaja.";
         $_SESSION['popup_type'] = "error";
     } else {
+        // Ustvari novega uporabnika
         $stmt = $conn->prepare("INSERT INTO users (name, lastname, email, gender, password, role) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssss", $newName, $newLastname, $newEmail, $newGender, $newPassword, $newRole);
         if ($stmt->execute()) {
@@ -39,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_user'])) {
     exit();
 }
 
-//  Uredi obstoječega uporabnika
+// Uredi obstoječega uporabnika
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_user'])) {
     $editId = $_POST['edit_user_id'];
     $editName = trim($_POST['edit_name']);
@@ -47,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_user'])) {
     $editEmail = trim($_POST['edit_email']);
     $editRole = $_POST['edit_role'];
 
-    // Preveri geslo
+    // Preveri, če je potrebno posodobiti geslo
     $passwordUpdate = "";
     if (!empty($_POST['edit_password'])) {
         $newPassword = password_hash($_POST['edit_password'], PASSWORD_DEFAULT);
@@ -70,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_user'])) {
     exit();
 }
 
-//  Simulacija transakcije
+// Simulacija transakcije (admin funkcija)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['add_transaction'])) {
     $userId = $_POST['user_id'];
     $type = $_POST['type'];
@@ -78,6 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['add_transaction'])) {
     $amount = round(floatval($_POST['amount']), 2);
     $desc = $_POST['description'];
 
+    // Preveri veljavnost vhodnih podatkov
     if ($amount > 0 && in_array($type, ['nakazilo', 'dvig', 'prenos'])) {
         $stmt = $conn->prepare("INSERT INTO transactions (user_id, type, category, amount, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("issds", $userId, $type, $category, $amount, $desc);
@@ -100,16 +104,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['add_transaction'])) {
     exit();
 }
 
-// Brisanje uporabnika
+// Brisanje uporabnika (admin funkcija)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['delete_user'])) {
     $deleteId = $_POST['edit_user_id'];
 
+    // Uporabi transakcijo za zagotovitev brisanja vseh povezanih podatkov
     $conn->begin_transaction();
     try {
+        // Najprej izbriši vse transakcije tega uporabnika
         $stmt1 = $conn->prepare("DELETE FROM transactions WHERE user_id = ?");
         $stmt1->bind_param("i", $deleteId);
         $stmt1->execute();
 
+        // Nato izbriši uporabnika
         $stmt2 = $conn->prepare("DELETE FROM users WHERE id = ?");
         $stmt2->bind_param("i", $deleteId);
         $stmt2->execute();
@@ -118,6 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['delete_user'])) {
         $_SESSION['popup'] = "🗑️ Uporabnik uspešno izbrisan.";
         $_SESSION['popup_type'] = "success";
     } catch (Exception $e) {
+        // V primeru napake razveljavi vse spremembe
         $conn->rollback();
         $_SESSION['popup'] = "❌ Napaka pri brisanju uporabnika.";
         $_SESSION['popup_type'] = "error";

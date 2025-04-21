@@ -2,6 +2,7 @@
 require_once 'includes/db.php';
 require_once 'includes/auth.php';
 
+// Preveri, če je uporabnik prijavljen
 if (!isset($_SESSION['user'])) {
   header("Location: index.php");
   exit();
@@ -10,7 +11,7 @@ if (!isset($_SESSION['user'])) {
 $userId = $_SESSION['user']['id'];
 $search = $_GET['search'] ?? '';
 
-// pridobi transakcije
+// Pridobi transakcije z možnostjo iskanja
 $stmt = $conn->prepare("
   SELECT type, category, amount, description, created_at
   FROM transactions
@@ -21,7 +22,7 @@ $stmt->bind_param("iss", $userId, $search, $search);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// skupaj zapravljeno in prihodek
+// Izračunaj skupno porabljeno in prejeto
 $summaryStmt = $conn->prepare("
   SELECT 
     SUM(CASE WHEN type = 'dvig' THEN amount ELSE 0 END) AS total_spent,
@@ -35,7 +36,7 @@ $summaryResult = $summaryStmt->get_result()->fetch_assoc();
 $totalSpent = $summaryResult['total_spent'] ?? 0;
 $totalIncome = $summaryResult['total_income'] ?? 0;
 
-// zadnjih 7 dni 
+// Pridobi podatke za graf porabe po kategorijah za zadnjih 7 dni
 $chartStmt = $conn->prepare("
   SELECT category, SUM(amount) as total
   FROM transactions
@@ -56,7 +57,7 @@ while ($row = $chartResult->fetch_assoc()) {
   ];
 }
 
-// Fallback če ni podatkov za graf
+// Privzeti podatki za graf, če ni transakcij v zadnjem tednu
 if (empty($chartData)) {
   $chartData = [['x' => 'Ni stroškov', 'y' => 1]];
 }
@@ -82,6 +83,7 @@ if (empty($chartData)) {
     <div class="card full-width transactions-card">
       <div class="transactions-header">
         <h2>📋 Vse transakcije</h2>
+        <!-- Prikaz povzetka transakcij -->
         <div class="summary-box">
           <p><strong>Vse transakcije:</strong> <?= $result->num_rows ?></p>
           <p><strong>Skupaj porabljeno:</strong> <?= number_format($totalSpent, 2) ?>€</p>
@@ -89,6 +91,7 @@ if (empty($chartData)) {
         </div>
       </div>
 
+      <!-- Obrazec za iskanje transakcij -->
       <form method="GET" class="form-container" style="position: relative;">
       <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input 
@@ -104,6 +107,7 @@ if (empty($chartData)) {
         <button type="submit" class="btn">🔍 Išči</button>
       </form>
 
+      <!-- Seznam vseh transakcij -->
       <ul style="line-height: 1.8; margin-top: 1rem;">
         <?php while ($row = $result->fetch_assoc()): ?>
           <li>
@@ -125,7 +129,7 @@ if (empty($chartData)) {
 
 </div>
 
-<!-- ✅ Scripts -->
+<!-- JavaScript knjižnice za grafe in UI elemente -->
 <script src="assets/js/apex-charts.js"></script>
 <script src="assets/js/ui.js"></script>
 </body>

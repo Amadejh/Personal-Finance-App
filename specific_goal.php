@@ -7,11 +7,13 @@ redirect_if_not_logged_in();
 $userId = $_SESSION['user']['id'];
 $goalId = $_GET['id'] ?? null;
 
+// Preusmeri na nadzorno ploščo, če cilj ni podan
 if (!$goalId) {
     header("Location: dashboard.php");
     exit;
 }
 
+// Pridobi podrobnosti o cilju
 $stmt = $conn->prepare("SELECT * FROM savings_accounts WHERE id = ? AND user_id = ?");
 $stmt->bind_param("ii", $goalId, $userId);
 $stmt->execute();
@@ -19,14 +21,15 @@ $result = $stmt->get_result();
 $goal = $result->fetch_assoc();
 $stmt->close();
 
+// Preveri, če cilj obstaja in če pripada uporabniku
 if (!$goal) {
     echo "❌ Goal not found or access denied.";
     exit;
 }
 
-// redirect samo ce je cilj ze claimed
+// Preusmeri, če je cilj že dosežen
 if ($goal['balance'] >= $goal['goal_amount']) {
-  // ce ni ga oznaci kot complete in ugasni autosave
+  // Če cilj še ni označen kot zaključen, ga označi in ustavi avtomatski prenos
   if (!$goal['is_claimed']) {
       $stmt = $conn->prepare("UPDATE savings_accounts SET monthly_amount = 0 WHERE id = ?");
       $stmt->bind_param("i", $goalId);
@@ -34,14 +37,14 @@ if ($goal['balance'] >= $goal['goal_amount']) {
       $stmt->close();
   }
 
-  //redirect razen ce je claimable
+  // Preusmeri, razen če je pogled za zahtevanje izplačila
   if (!isset($_GET['claim_view'])) {
       header("Location: dashboard.php");
       exit;
   }
 }
 
-
+// Izračunaj napredek za prikaz na strani
 $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance']) : 0;
 ?>
 <!DOCTYPE html>
@@ -53,11 +56,10 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
 </head>
 <body class="dashboard-page">
 
-<!-- top navbar -->
+<!-- Vključi zgornjo navigacijsko vrstico -->
 <?php include 'partials/navbar.php'; ?>
 
-<!-- main content -->
-
+<!-- Glavna vsebina strani -->
 <div class="page-content">
 <main class="goal-detail-page">
   <?php if (isset($_SESSION['popup'])): ?>
@@ -67,12 +69,13 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
   <div class="card goal-detail">
     <h2>🎯 <?= htmlspecialchars($goal['name']) ?></h2>
 
+    <!-- Prikaz napredka pri varčevanju -->
     <p><strong>Napredek:</strong> <?= number_format($goal['balance'], 2) ?>€ of <?= number_format($goal['goal_amount'], 2) ?>€</p>
     <div class="progress-bar">
     <div class="fill" style="width: <?= min(100, ($goal['goal_amount'] > 0 ? ($goal['balance'] / $goal['goal_amount']) * 100 : 0)) ?>%"></div>
-
     </div>
 
+    <!-- Status avtomatskega varčevanja -->
     <p><strong>Autosave:</strong>
       <?php if ($goal['monthly_amount'] > 0): ?>
         <span class="badge badge-green">🟢 Nastavljeno</span>
@@ -83,9 +86,9 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
       <?php endif; ?>
     </p>
 
-<!-- forms za dodajanje novih sredstev -->
+<!-- Obrazci za upravljanje s ciljem -->
 <div class="flex-row" style="gap: 2rem; margin-top: 2rem;">
-  <!-- form za rocni premik -->
+  <!-- Obrazec za ročni prenos sredstev -->
   <div style="flex: 1;">
     <form method="post" class="goal-form">
     <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
@@ -97,7 +100,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
     </form>
   </div>
 
-  <!-- autosave-->
+  <!-- Obrazec za nastavitev avtomatskega varčevanja -->
   <div style="flex: 1;">
     <form method="post" class="goal-form">
     <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
@@ -109,7 +112,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
     </form>
 
     <?php if ($goal['monthly_amount'] > 0): ?>
-      <!-- stop autosave -->
+      <!-- Gumb za ustavitev avtomatskega varčevanja -->
       <form method="post" style="margin-top: 1rem;">
       <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="stop_automation" value="1">
@@ -122,8 +125,7 @@ $progress = $goal['goal_amount'] > 0 ? min($goal['goal_amount'], $goal['balance'
 
 <hr>
 
-
-    <!-- briši cilj -->
+    <!-- Gumb za brisanje cilja -->
     <form method="post" action="dashboard.php" onsubmit="return confirm('Ali res želiš izbrisati ta cilj?');">
     <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
       <input type="hidden" name="delete_savings_account_id" value="<?= $goal['id'] ?>">

@@ -6,12 +6,14 @@ $success = '';
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Pridobi in očisti vnesene podatke
     $name = trim($_POST['name']);
     $lastname = trim($_POST['lastname']);
     $email = trim($_POST['email']);
     $gender = $_POST['gender'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
+    // Preveri, če email že obstaja v bazi
     $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $check->bind_param("s", $email);
     $check->execute();
@@ -20,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($check->num_rows > 0) {
         $error = "Ta email je že registriran.";
     } else {
+        // Če email ne obstaja, ustvari novega uporabnika
         $stmt = $conn->prepare("INSERT INTO users (name, lastname, email, gender, password, role) VALUES (?, ?, ?, ?, ?, 'user')");
         $stmt->bind_param("sssss", $name, $lastname, $email, $gender, $password);
 
@@ -50,6 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <p class="success"><?= $success ?></p>
     <?php endif; ?>
 
+    <!-- Registracijski obrazec -->
     <form method="post">
     <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="text" name="name" placeholder="Ime" required>

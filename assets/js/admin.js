@@ -1,34 +1,39 @@
-// ✅ Nalaganje uporabnikov z AJAX
+// ✅ Nalaganje uporabnikov z AJAX - osnovna funkcija
 function loadUsers(search = '', page = 1) {
   $.get("search_users.php", { search, page }, function (data) {
     $("#user-list").html(data);
   });
 }
 
-// ✅ Autocomplete funkcija za search_users.php
+// ✅ Funkcija za avtomatsko predlaganje uporabnikov pri iskanju
 function setupAutocomplete(inputId) {
   const input = document.getElementById(inputId);
   let currentFocus = -1;
 
+  // Proži ob vnosu v iskalno polje
   input.addEventListener("input", function () {
     const val = this.value;
     if (!val) return closeAllLists();
 
+    // Pridobi predloge iz API-ja
     $.get("user_suggestions.php", { q: val }, function (data) {
       const suggestions = JSON.parse(data);
       closeAllLists();
 
+      // Ustvari seznam predlogov
       const list = document.createElement("DIV");
       list.setAttribute("id", inputId + "-autocomplete-list");
       list.setAttribute("class", "suggestions-box animated-dropdown"); 
       input.parentNode.appendChild(list);
 
+      // Ustvari elemente za vsako predlogo
       suggestions.forEach(suggestion => {
         const item = document.createElement("DIV");
         item.innerHTML = `<strong>${suggestion.label.substr(0, val.length)}</strong>${suggestion.label.substr(val.length)}`;
         item.innerHTML += `<input type="hidden" value="${suggestion.value}">`;
         item.setAttribute("data-value", suggestion.value);
 
+        // Nastavi dogodek ob kliku na predlog
         item.addEventListener("click", function () {
           input.value = this.getAttribute("data-value");
           closeAllLists();
@@ -40,6 +45,7 @@ function setupAutocomplete(inputId) {
     });
   });
 
+  // Upravljanje s tipkovnico za navigacijo med predlogi
   input.addEventListener("keydown", function (e) {
     let x = document.getElementById(inputId + "-autocomplete-list");
     if (x) x = x.getElementsByTagName("div");
@@ -56,6 +62,7 @@ function setupAutocomplete(inputId) {
     }
   });
 
+  // Pomožne funkcije za označevanje aktivnih predlogov
   function addActive(x) {
     if (!x) return false;
     removeActive(x);
@@ -68,6 +75,7 @@ function setupAutocomplete(inputId) {
     for (const el of x) el.classList.remove("autocomplete-active");
   }
 
+  // Zapri meni s predlogi
   function closeAllLists(elmnt) {
     const items = document.getElementsByClassName("suggestions-box");
     for (const item of items) {
@@ -77,36 +85,37 @@ function setupAutocomplete(inputId) {
     }
   }
 
+  // Dogodek za zapiranje predlogov ob kliku zunaj seznama
   document.addEventListener("click", function (e) {
     closeAllLists(e.target);
   });
 }
 
-
+// Inicializacija ob nalaganju dokumenta
 $(function () {
+  // Naloži privzeti seznam uporabnikov
   loadUsers();
+  // Nastavi avtomatsko predlaganje za iskalno polje
   setupAutocomplete("search-input");
 
- 
+  // Dogodek za iskanje uporabnikov ob vpisu v iskalno polje
   $("#search-input").on("keyup", function () {
     const value = $(this).val();
     loadUsers(value);
   });
 
-// ✅ Fadein Fadeout popup logika
+// ✅ Funkcija za prikaz/skrivanje sporočil o uspehu/napaki (Fadein/Fadeout)
 const popup = document.getElementById("popup");
 if (popup) {
   // Takoj se prikaže
   popup.style.opacity = "1";
   popup.style.transition = "opacity 0.5s ease";
 
-  // Počasi pojenja
+  // Počasi izgine po nastavljenem času
   setTimeout(() => {
     popup.style.opacity = "0";
     setTimeout(() => popup.remove(), 500); 
   }, 2500);
 }
-
-
 
 });

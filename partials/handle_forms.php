@@ -4,8 +4,9 @@ ini_set('error_log', __DIR__ . '/logs/php-error.log');
 
 require_once __DIR__ . '/../includes/db.php';
 
-
+// Glavna funkcija za obdelavo obrazcev
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Preveri CSRF žeton za preprečevanje napada CSRF
     if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
         $_SESSION['popup'] = "⚠️ Neveljavna zahteva. Poskusite znova.";
         $_SESSION['popup_type'] = "error";
@@ -13,11 +14,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
+// Začni sejo, če še ni aktivna
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (!isset($_SESSION['user'])) return;
 
 $userId = $_SESSION['user']['id'];
 
+// 1. Obdelava nove transakcije
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['new_transaction'])) {
     $type = $_POST['type'] ?? '';
     $category = $_POST['category'] ?? '';
@@ -25,6 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['new_transaction'])) {
     $description = trim($_POST['description'] ?? '');
 
     if ($amount > 0 && in_array($type, ['nakazilo', 'dvig', 'prenos'])) {
+        // Shrani transakcijo v bazo
         $stmt = $conn->prepare("INSERT INTO transactions (user_id, type, category, amount, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("issds", $userId, $type, $category, $amount, $description);
         $stmt->execute();
@@ -39,8 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['new_transaction'])) {
     exit;
 }
 
-
-// ustvari nov savings/cilj
+// 2. Ustvari nov varčevalni cilj
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_savings_account'])) {
     $name = trim($_POST['goal_name']);
     $goal = floatval($_POST['goal_amount']);
@@ -60,13 +63,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['create_savings_accoun
     exit;
 }
 
-// ročni prenos v cilj/savings
+// 3. Ročni prenos sredstev v varčevalni cilj
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['transfer_to_savings'])) {
     $amount = floatval($_POST['transfer_amount']);
     $savingsId = intval($_POST['savings_account']);
 
+    // Uporabi transakcijo za zagotovitev konsistentnosti podatkov
     $conn->begin_transaction();
 
+    // Preveri, če je dovolj sredstev na glavnem računu
     $check = $conn->prepare("SELECT main_balance FROM users WHERE id = ?");
     $check->bind_param("i", $userId);
     $check->execute();
@@ -75,17 +80,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['transfer_to_savings']
     $check->close();
 
     if ($mainBal >= $amount && $amount > 0) {
+        // Zmanjšaj stanje na glavnem računu
         $stmt1 = $conn->prepare("UPDATE users SET main_balance = main_balance - ? WHERE id = ?");
         $stmt1->bind_param("di", $amount, $userId);
         $stmt1->execute();
         $stmt1->close();
 
+        // Povečaj stanje na varčevalnem računu
         $stmt2 = $conn->prepare("UPDATE savings_accounts SET balance = balance + ? WHERE id = ? AND user_id = ?");
         $stmt2->bind_param("dii", $amount, $savingsId, $userId);
         $stmt2->execute();
         $stmt2->close();
 
-        // prenos šteje kot transakcijo
+        // Zabeleži prenos kot transakcijo
         $description = "Prenos v cilj";
         $stmt3 = $conn->prepare("INSERT INTO transactions (user_id, type, amount, description, category, created_at) VALUES (?, 'prenos', ?, ?, 'Drugo', NOW())");
         $stmt3->bind_param("ids", $userId, $amount, $description);
@@ -102,11 +109,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['transfer_to_savings']
     exit;
 }
 
-// autosave za izbran cilj
+// 4. Nastavitev avtomatskega varčevanja za cilj
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $accountId = intval($_POST['savings_account_id'] ?? 0);
 
-    // ustavi avtomatsko varčevanje če je to zahtevano
+    // Ustavi avtomatsko varčevanje, če je to zahtevano
     if (isset($_POST['stop_automation']) && $accountId > 0) {
         $stmt = $conn->prepare("UPDATE savings_accounts SET monthly_amount = 0, duration_months = 0 WHERE id = ? AND user_id = ?");
         $stmt->bind_param("ii", $accountId, $userId);
@@ -120,10 +127,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // autosave garbage
+    // Nastavi avtomatsko varčevanje
     if (isset($_POST['setup_automation']) && $accountId > 0) {
         $months = intval($_POST['duration_months'] ?? 0);
 
+        // Pridobi podatke o cilju
         $stmt = $conn->prepare("SELECT goal_amount, balance FROM savings_accounts WHERE id = ? AND user_id = ?");
         $stmt->bind_param("ii", $accountId, $userId);
         $stmt->execute();
@@ -135,6 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $goal = $goalData['goal_amount'];
             $current = $goalData['balance'];
 
+            // Izračunaj mesečni znesek na podlagi preostalega zneska in števila mesecev
             $remaining = $goal - $current;
             $monthly = $months > 0 ? round($remaining / $months, 2) : 0;
 
@@ -157,13 +166,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-
-
-// celotna claim/delete logika
+// 5. Unovčenje/izbris doseženega cilja
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
     $goalId = (int)$_POST['claim_goal_id'];
 
-    // varno dobi ime in stanje cilja
+    // Varno pridobi ime in stanje cilja
     $goalQuery = $conn->prepare("SELECT name, balance FROM savings_accounts WHERE id = ? AND user_id = ?");
     $goalQuery->bind_param("ii", $goalId, $userId);
     $goalQuery->execute();
@@ -175,7 +182,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
         $balanceToReturn = (float)$goal['balance'];
         $goalName = $goal['name'];
 
-        // vrne denar v glavni račun
+        // Vrni denar na glavni račun
         $update = $conn->prepare("UPDATE users SET main_balance = main_balance + ? WHERE id = ?");
         $update->bind_param("di", $balanceToReturn, $userId);
         if (!$update->execute()) {
@@ -185,7 +192,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
         }
         $update->close();
 
-        //zabeleži vrnitev kot transakcijo
+        // Zabeleži vračilo kot transakcijo
         $desc = "Zaključen cilj";
         $type = 'nakazilo';
         $category = 'Drugo';
@@ -199,7 +206,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
         }
         $log->close();
 
-        // zbriše cilj
+        // Izbriši cilj
         $delete = $conn->prepare("DELETE FROM savings_accounts WHERE id = ? AND user_id = ?");
         $delete->bind_param("ii", $goalId, $userId);
         if (!$delete->execute()) {
@@ -218,6 +225,3 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['claim_goal_id'])) {
     exit;
 }
 }
-
-
-

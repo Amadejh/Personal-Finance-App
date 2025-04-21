@@ -8,13 +8,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["email"], $_POST["pass
     $email = trim($_POST["email"]);
     $password = $_POST["password"];
 
+    // Poizvedba v bazo po email naslovu
     $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // Preveri, če uporabnik obstaja in če je geslo pravilno
     if ($result && $user = $result->fetch_assoc()) {
         if (password_verify($password, $user['password'])) {
+            // Shrani uporabnika v sejo in preusmeri
             $_SESSION["user"] = $user;
             header("Location: " . ($user["role"] === "admin"
                 ? "/personal-banking-app/admin/dashboard.php"
@@ -40,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["email"], $_POST["pass
 </head>
 <body class="login-page">
 
-
+<!-- Prijavni obrazec -->
 <div class="form-container">
     <h2>Prijava</h2>
     <?php if (!empty($error)) echo "<p class='error'>$error</p>"; ?>

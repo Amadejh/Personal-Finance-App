@@ -1,6 +1,6 @@
-<!-- transakcije na dashboardu -->
+<!-- Transakcije na dashboardu - vključeno v dashboard.php -->
 
-  <div class="flex-row">
+<div class="flex-row">
     <!-- ➕ Nova transakcija -->
     <div class="card" style="flex: 1; margin-right: 1rem;">
       <h3>➕ Nova transakcija</h3>
@@ -8,6 +8,7 @@
       <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="new_transaction" value="1">
 
+        <!-- Vrsta transakcije (nakazilo, dvig, prenos) -->
         <label>Vrsta transakcije:</label>
         <select name="type" required>
           <option value="nakazilo">Nakazilo</option>
@@ -15,6 +16,7 @@
           <option value="prenos">Prenos</option>
         </select>
 
+        <!-- Izbira kategorije za lažjo analizo porabe -->
         <label>Kategorija:</label>
         <select name="category" required>
             <option value="">-- izberi kategorijo --</option>
@@ -39,7 +41,7 @@
       </form>
     </div>
 
-    <!-- 📋 Zadnje transakcije -->
+    <!-- 📋 Zadnje transakcije - pregled zadnjih aktivnosti -->
 <div class="card" style="flex: 1; min-width: 0;">
 <h3 style="display: flex; justify-content: space-between; align-items: center;">
   📋 Zadnje transakcije
@@ -48,12 +50,13 @@
 
   <ul style="line-height: 1.6;">
     <?php
+    // Prikaži zadnjih 10 transakcij
     $recent = $conn->prepare("SELECT type, category, amount, description, created_at FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 10");
     $recent->bind_param("i", $userId);
     $recent->execute();
     $res = $recent->get_result();
     while ($row = $res->fetch_assoc()):    
-      // za prikaz da prvo črko veliko tiskano
+      // Prva črka tipa transakcije naj bo velika
       $displayType = ucfirst($row['type']);
     ?>
       <li>

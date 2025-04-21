@@ -4,6 +4,7 @@
     <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
         <input type="hidden" name="create_user" value="1">
 
+        <!-- Osnovni podatki uporabnika -->
         <label style="font-weight: bold; display: block;">Ime:</label>
         <input type="text" name="new_name" required>
 
