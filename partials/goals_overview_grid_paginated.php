@@ -1,6 +1,6 @@
 <?php
 // paginacija setup
-$goalsPerPage = 8;
+$goalsPerPage = 9;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $goalsPerPage;
 
